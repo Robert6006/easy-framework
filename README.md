@@ -33,12 +33,23 @@ sessions, not just a single chat. That need — context that stays — became th
   as a fully-private option, but it is weak and only shows the *principle*, not easy's performance.
 - **Run it yourself:** download and run easy locally. Open to everyone.
 
-## Honest limits
+## Limits — honestly
 
-- A small local model follows rules unreliably and can ramble — that is the *model*, not the method. For
-  real quality, use a capable model (your key).
-- easy is a **method plus tooling, not a model.** It makes whatever model you plug in more steerable and
-  more honest about itself.
+**The model has limits.** A small local model follows rules unreliably and can ramble; a capable model
+(your key) does far better. That is the *model*, not the method.
+
+**easy has its own limits, too.**
+
+- **The check is a discipline, not a guarantee.** easy has the model check its own answer against the
+  rules — this surfaces reasoning and curbs overconfidence, but a model can still miss its own mistakes.
+  It shows its work; it does not prove it right.
+- **Rules steer, they don't force.** The model still has to follow the readable rules. Compliance is not
+  guaranteed.
+- **easy adds control and context, not knowledge.** It makes a model more steerable and more honest about
+  itself — not smarter or better-informed.
+- **You're in the loop.** easy is built for a human who reads and checks, not for hands-off automation.
+- **Persistence is local and yours.** Context lives in your files / your browser, with no cloud backup by
+  design — lose the files, lose the context. That is the trade-off for sovereignty.
 
 ## License
 
@@ -46,7 +57,7 @@ GNU General Public License v3.0 — see [LICENSE](LICENSE).
 
 ## Contributing
 
-Issues and pull requests are welcome. [Contribution guide + any CLA note — to be added.]
+Issues and pull requests are welcome. A contribution guide will follow.
 
 ## Status
 
