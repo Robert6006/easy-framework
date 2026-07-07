@@ -25,6 +25,8 @@ sessions, not just a single chat. That need — context that stays — became th
   someone else's server.
 - **Your model.** Strong cloud model or a small local one — your choice, and you can see where your data
   goes on each path.
+- **Delete = gone.** easy is just files on your machine. Don't want it anymore? Delete the folder — no
+  account, no cloud copy, no residue.
 
 ## Try it
 
@@ -57,7 +59,7 @@ GNU General Public License v3.0 — see [LICENSE](LICENSE).
 
 ## Contributing
 
-Issues and pull requests are welcome. A contribution guide will follow.
+Issues and pull requests are welcome — see [CONTRIBUTING](CONTRIBUTING.md).
 
 ## Status
 
