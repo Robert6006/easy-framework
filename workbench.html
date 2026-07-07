@@ -1,0 +1,475 @@
+<!doctype html>
+<!--
+  easy — Workbench (DE/EN) — generische Repo-Fassung.
+  Zeigt die Methode: ein kleines Modell laeuft lokal (WebGPU) ODER dein eigener API-Key,
+  gesteuert durch lesbare Regeln, mit sichtbarem Pruef-Schritt. Alles bleibt lokal.
+  Kein Backend, kein Tracking. Feedback laeuft ueber die GitHub Issues des Projekts.
+-->
+<html lang="de" class="lang-de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>easy — Workbench: KI im Browser mit lesbaren Regeln steuern</title>
+<meta name="description" content="Probier easy im Browser: ein kleines Modell läuft lokal, gesteuert durch lesbare Regel-Dateien, mit sichtbarem Prüf-Schritt. Dein Kontext bleibt lokal. Open Source (GNU GPL).">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<meta property="og:type" content="website">
+<meta property="og:title" content="easy — Workbench">
+<meta property="og:description" content="Probier easy im Browser: lokal gesteuert durch lesbare Regel-Dateien, mit sichtbarem Prüf-Schritt. Dein Kontext bleibt lokal.">
+<meta name="twitter:card" content="summary">
+<style>
+  :root{
+    --paper:#F7F8F6; --ink:#16211C; --muted:#5A635C; --faint:#8A928B;
+    --line:#DFE4DE; --panel:#FFFFFF; --accent:#2F6B4F; --warn:#A24B3E;
+    --check:#7A5B13; --checkbg:#FFF6E9;
+    --mono:ui-monospace,"SF Mono","Cascadia Code","JetBrains Mono",Menlo,Consolas,monospace;
+    --sans:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    --w:48rem;
+  }
+  *{box-sizing:border-box} html,body{margin:0}
+  body{background:var(--paper); color:var(--ink); font-family:var(--sans); font-size:17px; line-height:1.6; -webkit-font-smoothing:antialiased}
+  .wrap{max-width:var(--w); margin:0 auto; padding:2.2rem 1.4rem 4rem}
+  a{color:var(--accent); text-underline-offset:2px}
+  [data-lang]{display:none}
+  body.lang-de [data-lang="de"]{display:revert}
+  body.lang-en [data-lang="en"]{display:revert}
+  header{display:flex; align-items:baseline; justify-content:space-between; gap:1rem; margin-bottom:1.6rem}
+  .brand{font-family:var(--mono); font-size:1.35rem; font-weight:600; letter-spacing:-.02em; display:flex; align-items:center; gap:.5rem}
+  .dot{width:.55rem; height:.55rem; border-radius:50%; background:var(--accent); display:inline-block; box-shadow:0 0 0 3px rgba(47,107,79,.15)}
+  .ctrl{display:flex; gap:.6rem; align-items:center}
+  .lang{font-family:var(--mono); font-size:.8rem; border:1px solid var(--line); background:var(--panel); border-radius:5px; padding:.3rem .5rem; cursor:pointer; color:var(--muted)}
+  .lang b{color:var(--ink)}
+  h1{font-family:var(--mono); font-size:1.5rem; letter-spacing:-.01em; margin:0 0 .4rem}
+  .sub{color:var(--muted); margin:0 0 1.6rem}
+  .eyebrow{font-family:var(--mono); font-size:.72rem; letter-spacing:.14em; text-transform:uppercase; color:var(--faint); margin:1.6rem 0 .5rem}
+  h2{font-family:var(--mono); font-weight:600; font-size:1.05rem; margin:0 0 .5rem}
+  p{margin:.55rem 0}
+  .note{border-left:3px solid var(--accent); background:#F0F5F1; border-radius:0 6px 6px 0; padding:.9rem 1.1rem; margin:1rem 0}
+  .note .tag{font-family:var(--mono); font-size:.72rem; letter-spacing:.12em; text-transform:uppercase; color:var(--accent); display:block; margin-bottom:.35rem}
+  .warnbox{border-left:3px solid var(--warn); background:#FBF0EE; border-radius:0 6px 6px 0; padding:.9rem 1.1rem; margin:1rem 0; font-size:.95rem}
+  .warnbox .tag{font-family:var(--mono); font-size:.72rem; letter-spacing:.12em; text-transform:uppercase; color:var(--warn); display:block; margin-bottom:.35rem}
+  .card{background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:1.1rem 1.2rem; margin:1rem 0}
+  .kv{font-family:var(--mono); font-size:.85rem; color:var(--muted); margin:.2rem 0}
+  .kv b{color:var(--ink)}
+  .btn{font-family:var(--mono); font-size:.92rem; border:1px solid var(--accent); background:var(--accent); color:#fff; border-radius:7px; padding:.6rem 1.05rem; cursor:pointer}
+  .btn:hover{filter:brightness(1.05)}
+  .btn.ghost{background:transparent; color:var(--accent)}
+  .btn:disabled{opacity:.45; cursor:not-allowed}
+  .btnrow{display:flex; flex-wrap:wrap; gap:.6rem; margin-top:.6rem}
+  .ways{display:grid; gap:.9rem; margin:1rem 0}
+  @media(min-width:620px){ .ways{grid-template-columns:1fr 1fr} }
+  .way{border:1px solid var(--line); border-radius:10px; padding:1rem 1.1rem; background:var(--panel); cursor:pointer; transition:border-color .15s}
+  .way:hover{border-color:var(--accent)}
+  .way.sel{border-color:var(--accent); box-shadow:0 0 0 2px rgba(47,107,79,.12)}
+  .way h3{font-family:var(--mono); font-size:1rem; margin:0 0 .35rem}
+  .way .lead{color:var(--muted); font-size:.92rem; margin:0 0 .5rem}
+  .way .pill{display:inline-block; font-family:var(--mono); font-size:.68rem; letter-spacing:.1em; text-transform:uppercase; color:var(--accent); border:1px solid var(--line); border-radius:20px; padding:.1rem .55rem; margin-bottom:.4rem}
+  .bar{height:.55rem; background:#E9EEEA; border-radius:20px; overflow:hidden; margin:.5rem 0}
+  .bar > i{display:block; height:100%; width:0%; background:var(--accent); transition:width .25s}
+  .prog{font-family:var(--mono); font-size:.82rem; color:var(--muted)}
+  #chat{border:1px solid var(--line); border-radius:10px; background:var(--panel); min-height:12rem; max-height:26rem; overflow-y:auto; padding:1rem; margin:.8rem 0}
+  .msg{margin:.55rem 0; padding:.55rem .8rem; border-radius:8px; white-space:pre-wrap; word-wrap:break-word}
+  .msg.u{background:#EEF4F0; border:1px solid #DCE7E0}
+  .msg.a{background:#FbFCFb; border:1px solid var(--line)}
+  .msg .who{font-family:var(--mono); font-size:.68rem; letter-spacing:.1em; text-transform:uppercase; color:var(--faint); display:block; margin-bottom:.25rem}
+  .msg.check{background:var(--checkbg); border:1px solid #E7D8AE}
+  .msg.check .who{color:var(--check)}
+  .msg.miss{background:#FBF0EE; border:1px solid #E7C3BC}
+  .msg.miss .who{color:var(--warn)}
+  .composer{display:flex; gap:.6rem; margin-top:.4rem}
+  .composer textarea{flex:1; font-family:var(--sans); font-size:1rem; border:1px solid var(--line); border-radius:8px; padding:.6rem .75rem; resize:vertical; min-height:2.9rem; background:var(--panel); color:var(--ink)}
+  .keyfield{width:100%; font-family:var(--mono); font-size:.9rem; border:1px solid var(--line); border-radius:8px; padding:.55rem .7rem; margin:.4rem 0; background:var(--panel); color:var(--ink)}
+  select.keyfield{cursor:pointer}
+  .hidden{display:none !important}
+  .rulebox{font-family:var(--mono); font-size:.8rem; color:var(--muted); background:#F3F6F4; border:1px solid var(--line); border-radius:8px; padding:.7rem .8rem; margin:.5rem 0; white-space:pre-wrap; max-height:11rem; overflow:auto; width:100%}
+  .startzone{border:1px solid var(--accent); border-radius:12px; padding:1.2rem 1.3rem; margin:1.6rem 0 0; background:#F4F8F5}
+  .startzone h2{margin-top:0}
+  footer{margin-top:2.6rem; padding-top:1.2rem; border-top:1px solid var(--line); color:var(--muted); font-size:.85rem; font-family:var(--mono)}
+  footer .nav{margin:0 0 .6rem}
+  @media (max-width:480px){ body{font-size:16px} .wrap{padding:1.6rem 1.1rem 3rem} }
+</style>
+</head>
+<body class="lang-de">
+<div class="wrap">
+
+  <header>
+    <div class="brand"><span class="dot" aria-hidden="true"></span>easy · Workbench</div>
+    <div class="ctrl">
+      <button class="lang" id="langBtn" aria-label="Sprache wechseln / switch language">
+        <span data-lang="de"><b>DE</b> · EN</span><span data-lang="en">DE · <b>EN</b></span>
+      </button>
+    </div>
+  </header>
+
+  <h1><span data-lang="de">Probier easy im Browser</span><span data-lang="en">Try easy in your browser</span></h1>
+  <p class="sub">
+    <span data-lang="de">Ein kleines Modell l&auml;uft lokal auf deinem Rechner, gesteuert durch lesbare Regel-Dateien &mdash; mit sichtbarem Pr&uuml;f-Schritt. Dein Kontext bleibt lokal erhalten.</span>
+    <span data-lang="en">A small model runs locally on your machine, steered by readable rule files &mdash; with a visible checking step. Your context stays local.</span>
+  </p>
+
+  <div class="note">
+    <span class="tag" data-lang="de">Vorab</span><span class="tag" data-lang="en">Up front</span>
+    <p data-lang="de" style="margin:.2rem 0">Diese Workbench zeigt den <strong>Funken</strong> der Methode &mdash; Regeln in Dateien steuern die KI, ein Pr&uuml;f-Schritt wird sichtbar &mdash; und einen ersten Vorgeschmack auf ihr <strong>Herz</strong>: Dein Verlauf und deine Regeln bleiben <strong>lokal erhalten</strong>, &uuml;ber mehrere Sitzungen hinweg (in diesem Browser oder als Datei zum Mitnehmen). Nichts davon wird gesendet. Sie ist eine Browser-Demo, nicht das volle easy: keine Dateien auf deinem Rechner, keine ger&auml;te&uuml;bergreifenden Regeln, keine Projektstruktur &mdash; das l&auml;dst du herunter.</p>
+    <p data-lang="en" style="margin:.2rem 0">This workbench shows the <strong>spark</strong> of the method &mdash; rules in files steer the AI and a checking step becomes visible &mdash; and a first taste of its <strong>heart</strong>: your history and rules <strong>persist locally</strong> across sessions (in this browser or as a file to take with you). None of it is sent anywhere. It's a browser demo, not the full easy: no files on your machine, no rules across devices, no project structure &mdash; that's the download.</p>
+  </div>
+
+  <div class="warnbox">
+    <span class="tag" data-lang="de">Wichtig zum lokalen Modell</span><span class="tag" data-lang="en">About the local model</span>
+    <p data-lang="de" style="margin:.2rem 0">Das lokale Modell ist <strong>klein und schwach</strong>. Du siehst hier das <strong>Prinzip</strong> &mdash; wie Datei-Regeln steuern und der Pr&uuml;f-Schritt erscheint &mdash;, <strong>nicht</strong> easys Leistung. Ein kleines Modell h&auml;lt sich nicht immer sauber an die Regeln; das liegt am Modell, nicht an der Methode. F&uuml;r echte Qualit&auml;t nutze deinen <strong>eigenen Zugang</strong> (Weg&nbsp;2). Das volle easy l&auml;dst du herunter.</p>
+    <p data-lang="en" style="margin:.2rem 0">The local model is <strong>small and weak</strong>. What you see is the <strong>principle</strong> &mdash; how file rules steer and the checking step appears &mdash; <strong>not</strong> easy's performance. A small model won't always follow the rules cleanly; that's the model, not the method. For real quality, use your <strong>own access</strong> (path&nbsp;2). The full easy you download.</p>
+  </div>
+
+  <section>
+    <p class="eyebrow" data-lang="de">Was mit deiner Sitzung passiert</p>
+    <p class="eyebrow" data-lang="en">What happens with your session</p>
+    <p class="kv" data-lang="de"><b>Standard:</b> Es wird <strong>nichts gesendet</strong>. Das Modell l&auml;uft in deinem Browser; deine Eingaben bleiben auf deinem Rechner. Keine Cookies, kein Tracking.</p>
+    <p class="kv" data-lang="en"><b>Default:</b> <strong>nothing is sent</strong>. The model runs in your browser; your input stays on your machine. No cookies, no tracking.</p>
+    <p class="kv" data-lang="de"><b>Ged&auml;chtnis:</b> Dein Verlauf und deine Regeln werden <strong>lokal in deinem Browser</strong> gespeichert, damit du fortsetzen kannst. Du kannst es jederzeit l&ouml;schen oder als Datei sichern.</p>
+    <p class="kv" data-lang="en"><b>Memory:</b> your history and rules are stored <strong>locally in your browser</strong> so you can continue. You can clear it anytime or save it as a file.</p>
+    <p class="kv" data-lang="de"><b>Weg 2 (eigener Schl&uuml;ssel):</b> Deine Eingaben gehen an Anthropic und unterliegen <em>deren</em> Bedingungen &mdash; das pr&uuml;fst du dort. Dein Schl&uuml;ssel bleibt in deinem Browser und wird nirgends gespeichert.</p>
+    <p class="kv" data-lang="en"><b>Path 2 (your own key):</b> your input goes to Anthropic under <em>their</em> terms &mdash; check that there. Your key stays in your browser and is stored nowhere.</p>
+  </section>
+
+  <section>
+    <p class="eyebrow" data-lang="de">Die Regeln, die die KI steuern</p>
+    <p class="eyebrow" data-lang="en">The rules that steer the AI</p>
+    <p data-lang="de">Das ist der Kern: Die KI folgt <strong>lesbaren Regeln</strong>, die du kontrollierst. Hier siehst du sie &mdash; und darfst sie &auml;ndern, bevor du unten startest. (&Auml;nderungen bleiben lokal gespeichert.)</p>
+    <p data-lang="en">This is the core: the AI follows <strong>readable rules</strong> you control. Here they are &mdash; and you may edit them before you start below. (Changes are saved locally.)</p>
+    <textarea class="rulebox" id="rules" spellcheck="false"></textarea>
+    <div class="btnrow">
+      <button class="btn ghost" id="btnRulesReset" data-lang="de">Regeln zur&uuml;cksetzen</button>
+      <button class="btn ghost" id="btnRulesResetEn" data-lang="en">Reset rules</button>
+    </div>
+  </section>
+
+  <div class="startzone">
+    <p class="eyebrow" style="margin-top:0" data-lang="de">Jetzt starten</p>
+    <p class="eyebrow" style="margin-top:0" data-lang="en">Start now</p>
+    <h2 data-lang="de">W&auml;hle deinen Weg</h2>
+    <h2 data-lang="en">Choose your path</h2>
+
+    <div class="ways">
+      <div class="way sel" id="wayLocal" tabindex="0" role="button" aria-pressed="true">
+        <span class="pill" data-lang="de">Standard · privat</span><span class="pill" data-lang="en">Default · private</span>
+        <h3 data-lang="de">1 · Lokales Modell</h3><h3 data-lang="en">1 · Local model</h3>
+        <p class="lead" data-lang="de">L&auml;uft komplett in deinem Browser (WebGPU). Deine Eingaben verlassen den Rechner nicht.</p>
+        <p class="lead" data-lang="en">Runs entirely in your browser (WebGPU). Your input never leaves the device.</p>
+      </div>
+      <div class="way" id="wayKey" tabindex="0" role="button" aria-pressed="false">
+        <span class="pill" data-lang="de">Optional · dein Zugang</span><span class="pill" data-lang="en">Optional · your access</span>
+        <h3 data-lang="de">2 · Eigener Schl&uuml;ssel</h3><h3 data-lang="en">2 · Your own key</h3>
+        <p class="lead" data-lang="de">Du bringst deinen <strong>eigenen</strong> Anthropic-Key mit &mdash; und w&auml;hlst dein Modell. St&auml;rker; Eingaben gehen an Anthropic.</p>
+        <p class="lead" data-lang="en">You bring your <strong>own</strong> Anthropic key &mdash; and pick your model. Stronger; input goes to Anthropic.</p>
+      </div>
+    </div>
+
+    <div id="stepLocal">
+      <p style="margin:.7rem 0 .3rem"><b data-lang="de">Modell (lokal)</b><b data-lang="en">Model (local)</b></p>
+      <label class="kv"><input type="radio" name="model" value="phi" checked> Phi-3.5-mini &middot; <span data-lang="de">~2,4 GB &middot; sch&auml;rfer beim Befolgen von Regeln</span><span data-lang="en">~2.4 GB &middot; sharper at following rules</span></label><br>
+      <label class="kv"><input type="radio" name="model" value="llama"> Llama-3.2-3B &middot; <span data-lang="de">~2,0 GB &middot; etwas kleiner</span><span data-lang="en">~2.0 GB &middot; a bit smaller</span></label>
+      <div class="btnrow">
+        <button class="btn" id="btnLoad" data-lang="de">Modell laden &amp; starten</button>
+        <button class="btn" id="btnLoadEn" data-lang="en">Load model &amp; start</button>
+      </div>
+      <div id="loadProg" class="hidden" style="margin-top:.8rem">
+        <div class="bar"><i id="barFill"></i></div>
+        <div class="prog" id="progText">…</div>
+      </div>
+    </div>
+
+    <div id="stepKey" class="hidden">
+      <input class="keyfield" id="apiKey" type="password" placeholder="sk-ant-…  (dein eigener Anthropic-Key)" autocomplete="off">
+      <p style="margin:.5rem 0 .2rem"><b data-lang="de">Modell w&auml;hlen</b><b data-lang="en">Choose model</b></p>
+      <select class="keyfield" id="claudeModel"></select>
+      <input class="keyfield hidden" id="claudeModelCustom" type="text" placeholder="eigene Modell-Kennung, z. B. claude-…">
+      <p class="kv" data-lang="de">Modellnamen &auml;ndern sich mit der Zeit. Bei einer Fehlermeldung w&auml;hle „andere Kennung" und trage die aktuelle ein.</p>
+      <p class="kv" data-lang="en">Model names change over time. On an error, pick "other" and enter the current identifier.</p>
+      <div class="btnrow">
+        <button class="btn" id="btnKeyStart" data-lang="de">Mit Schl&uuml;ssel starten</button>
+        <button class="btn" id="btnKeyStartEn" data-lang="en">Start with key</button>
+      </div>
+    </div>
+  </div>
+
+  <section id="stepChat" class="hidden">
+    <p class="eyebrow" data-lang="de">Frag easy</p>
+    <p class="eyebrow" data-lang="en">Ask easy</p>
+    <div id="chat"></div>
+    <div class="composer">
+      <textarea id="input" rows="2" placeholder="…"></textarea>
+      <button class="btn" id="btnSend" data-lang="de">Senden</button>
+      <button class="btn" id="btnSendEn" data-lang="en">Send</button>
+    </div>
+    <div class="btnrow">
+      <button class="btn ghost" id="btnNew" data-lang="de">Neu / L&ouml;schen</button>
+      <button class="btn ghost" id="btnNewEn" data-lang="en">New / clear</button>
+      <button class="btn ghost" id="btnSaveSession" data-lang="de">Sitzung als Datei sichern</button>
+      <button class="btn ghost" id="btnSaveSessionEn" data-lang="en">Save session as file</button>
+      <button class="btn ghost" id="btnLoadSession" data-lang="de">Aus Datei fortsetzen</button>
+      <button class="btn ghost" id="btnLoadSessionEn" data-lang="en">Continue from file</button>
+      <button class="btn ghost" id="btnDownload" data-lang="de">Verlauf als Text</button>
+      <button class="btn ghost" id="btnDownloadEn" data-lang="en">Transcript as text</button>
+      <input type="file" id="fileSession" accept=".json,application/json" class="hidden">
+    </div>
+    <p class="kv" data-lang="de" style="margin-top:.6rem">Achte auf den <b>Pr&uuml;f-Schritt</b>: easy pr&uuml;ft ihre eigene Antwort gegen die Regeln. Erscheint er nicht, sagen wir es offen.</p>
+    <p class="kv" data-lang="en" style="margin-top:.6rem">Watch the <b>checking step</b>: easy checks her own answer against the rules. If it doesn't appear, we say so openly.</p>
+  </section>
+
+  <footer>
+    <p><span data-lang="de">Open Source unter der GNU General Public License (GPL-3.0). L&auml;uft auf jedem Betriebssystem.</span><span data-lang="en">Open source under the GNU General Public License (GPL-3.0).</span></p>
+    <p><a href="https://github.com/Robert6006/easy-framework" target="_blank" rel="noopener noreferrer">github.com/Robert6006/easy-framework</a> &middot; <a href="https://simon-easy.com" target="_blank" rel="noopener noreferrer">simon-easy.com</a></p>
+  </footer>
+
+</div>
+
+<script type="module">
+  import * as webllm from "https://esm.run/@mlc-ai/web-llm";
+
+  (function(){
+    var btn=document.getElementById('langBtn'), body=document.body, html=document.documentElement;
+    function set(l){ body.classList.toggle('lang-de',l==='de'); body.classList.toggle('lang-en',l==='en'); html.setAttribute('lang',l); try{localStorage.setItem('easy_lang',l);}catch(e){} }
+    var saved='de'; try{ saved=localStorage.getItem('easy_lang')||'de'; }catch(e){}
+    set(saved);
+    btn.addEventListener('click',function(){ set(body.classList.contains('lang-de')?'en':'de'); });
+  })();
+
+  const isEN = ()=>document.body.classList.contains('lang-en');
+  const $ = id=>document.getElementById(id);
+
+  const DEFAULT_RULES =
+`# easy-Regeln (bearbeitbar)
+Du bist "easy" — eine hilfreiche Assistentin, die nach LESBAREN REGELN arbeitet.
+
+ARBEITSWEISE:
+1. Antworte klar und knapp, in der Sprache der Frage.
+2. Behaupte nichts, was du nicht begründen kannst. Nenne Unsicherheit offen.
+3. Nichts Schädliches, nichts Erfundenes.
+
+PFLICHT — SICHTBARER PRÜF-SCHRITT:
+Nach deiner Antwort hängst du IMMER einen kurzen Block an:
+"— Prüfung: <1–2 Sätze, ob die Antwort die Regeln einhält und was unsicher bleibt>"
+Das ist der Kern: du prüfst deine eigene Antwort, statt sie nur zu behaupten.`;
+
+  const LS_RULES='easy_wb_rules', LS_HIST='easy_wb_history', LS_MODEL='easy_wb_claudeModel';
+
+  let savedRules=null; try{ savedRules=localStorage.getItem(LS_RULES); }catch(e){}
+  $('rules').value = (savedRules!==null && savedRules!=='') ? savedRules : DEFAULT_RULES;
+  function saveRules(){ try{ localStorage.setItem(LS_RULES, $('rules').value); }catch(e){} }
+  $('rules').addEventListener('input', saveRules);
+  $('btnRulesReset').addEventListener('click', ()=>{ $('rules').value=DEFAULT_RULES; saveRules(); });
+  $('btnRulesResetEn').addEventListener('click', ()=>{ $('rules').value=DEFAULT_RULES; saveRules(); });
+
+  let path = 'local';
+  const wayLocal=$('wayLocal'), wayKey=$('wayKey');
+  function selectWay(p){
+    path=p;
+    wayLocal.classList.toggle('sel', p==='local'); wayLocal.setAttribute('aria-pressed', p==='local');
+    wayKey.classList.toggle('sel', p==='key'); wayKey.setAttribute('aria-pressed', p==='key');
+    $('stepLocal').classList.toggle('hidden', p!=='local');
+    $('stepKey').classList.toggle('hidden', p!=='key');
+  }
+  wayLocal.addEventListener('click', ()=>selectWay('local'));
+  wayKey.addEventListener('click', ()=>selectWay('key'));
+  wayLocal.addEventListener('keydown', e=>{ if(e.key==='Enter'||e.key===' '){e.preventDefault();selectWay('local');}});
+  wayKey.addEventListener('keydown', e=>{ if(e.key==='Enter'||e.key===' '){e.preventDefault();selectWay('key');}});
+
+  const MODELS = {
+    phi:   { id:"Phi-3.5-mini-instruct-q4f16_1-MLC" },
+    llama: { id:"Llama-3.2-3B-Instruct-q4f16_1-MLC" }
+  };
+  function currentModelKey(){ const r=document.querySelector('input[name="model"]:checked'); return r? r.value : 'phi'; }
+
+  const CLAUDE_MODELS = [
+    { id:"claude-haiku-4-5-20251001", label:"Claude Haiku 4.5 — schnell & günstig" },
+    { id:"claude-sonnet-5",           label:"Claude Sonnet 5 — ausgewogen" },
+    { id:"claude-opus-4-8",           label:"Claude Opus 4.8 — am stärksten" },
+    { id:"__custom__",                label:"andere Kennung eingeben…" }
+  ];
+  (function initClaudeModels(){
+    const sel=$('claudeModel');
+    CLAUDE_MODELS.forEach(m=>{ const o=document.createElement('option'); o.value=m.id; o.textContent=m.label; sel.appendChild(o); });
+    let savedModel=null; try{ savedModel=localStorage.getItem(LS_MODEL); }catch(e){}
+    if(savedModel && CLAUDE_MODELS.some(m=>m.id===savedModel)) sel.value=savedModel;
+    else if(savedModel){ sel.value='__custom__'; $('claudeModelCustom').value=savedModel; $('claudeModelCustom').classList.remove('hidden'); }
+    sel.addEventListener('change', ()=>{ $('claudeModelCustom').classList.toggle('hidden', sel.value!=='__custom__'); });
+  })();
+  function chosenClaudeModel(){
+    const sel=$('claudeModel');
+    let m = sel.value==='__custom__' ? $('claudeModelCustom').value.trim() : sel.value;
+    if(!m) m='claude-haiku-4-5-20251001';
+    try{ localStorage.setItem(LS_MODEL, m); }catch(e){}
+    return m;
+  }
+
+  let engine=null, ready=false, byoKey=null;
+
+  let history=[];
+  function saveHist(){ try{ localStorage.setItem(LS_HIST, JSON.stringify(history)); }catch(e){} }
+  (function loadHist(){ try{ const s=localStorage.getItem(LS_HIST); if(s){ const a=JSON.parse(s); if(Array.isArray(a)) history=a; } }catch(e){} })();
+
+  function addMsg(role, text, kind){
+    const d=document.createElement('div');
+    d.className='msg '+(role==='user'?'u':'a')+(kind==='check'?' check':'')+(kind==='miss'?' miss':'');
+    const who=document.createElement('span'); who.className='who';
+    who.textContent = role==='user' ? (isEN()?'you':'du')
+                    : (kind==='check' ? (isEN()?'check':'prüfung')
+                    : (kind==='miss' ? (isEN()?'note':'hinweis') : 'easy'));
+    d.appendChild(who);
+    const b=document.createElement('div'); b.textContent=text; d.appendChild(b);
+    $('chat').appendChild(d); $('chat').scrollTop=$('chat').scrollHeight;
+    return b;
+  }
+
+  function splitCheck(full){
+    const pRe=/[—–-]\s*Pr[üu]fung\b/i, aRe=/[—–-]\s*Antwort\b/i;
+    const pIdx=full.search(pRe);
+    if(pIdx<0) return { answer:full.trim(), check:null, missing:true };
+    const aIdx=full.search(aRe);
+    if(aIdx>=0){
+      const marks=[aIdx,pIdx].sort((x,y)=>x-y);
+      const seg=(start)=>{ const nexts=marks.filter(i=>i>start); const end=nexts.length?Math.min.apply(null,nexts):full.length; return full.slice(start,end); };
+      const lead=full.slice(0,marks[0]).trim();
+      let answer=seg(aIdx).replace(aRe,'').trim();
+      if(lead) answer=(lead+(answer?('\n'+answer):'')).trim();
+      const check=seg(pIdx).trim();
+      return { answer:answer||'(—)', check:check, missing:false };
+    }
+    return { answer:full.slice(0,pIdx).trim()||'(—)', check:full.slice(pIdx).trim(), missing:false };
+  }
+
+  function renderCheck(res){
+    if(res.check) addMsg('easy', res.check, 'check');
+    else if(res.missing) addMsg('easy', isEN()?'⚠ The model did not provide the checking step.':'⚠ Das Modell hat den Prüf-Schritt nicht geliefert.', 'miss');
+  }
+
+  function renderHistory(){
+    $('chat').innerHTML='';
+    for(const m of history){
+      if(m.role==='user') addMsg('user', m.content);
+      else { const res=splitCheck(m.content); addMsg('easy', res.answer); renderCheck(res); }
+    }
+  }
+
+  if(history.length){ $('stepChat').classList.remove('hidden'); renderHistory(); }
+
+  function systemPrompt(){ return $('rules').value; }
+  function revealChat(){ $('stepChat').classList.remove('hidden'); if(history.length) renderHistory(); $('input').placeholder = isEN()? "Ask something…" : "Frag etwas…"; $('input').focus(); }
+
+  async function loadLocal(){
+    if(!('gpu' in navigator)){
+      alert(isEN()? "This browser has no WebGPU. Please use recent Chrome/Edge/Safari, or use path 2 (your own key)."
+                  : "Dieser Browser hat kein WebGPU. Bitte aktuelles Chrome/Edge/Safari nutzen, oder Weg 2 (eigener Key).");
+      return;
+    }
+    $('btnLoad').disabled=true; $('btnLoadEn').disabled=true;
+    $('loadProg').classList.remove('hidden');
+    const modelId = MODELS[currentModelKey()].id;
+    try{
+      engine = await webllm.CreateMLCEngine(modelId, {
+        initProgressCallback: (r)=>{
+          const pct = Math.round((r.progress||0)*100);
+          $('barFill').style.width = pct+'%';
+          $('progText').textContent = (r.text||'') + '  ('+pct+'%)';
+        }
+      });
+      ready=true; revealChat();
+    }catch(err){
+      $('progText').textContent = (isEN()?"Load failed: ":"Laden fehlgeschlagen: ") + (err&&err.message?err.message:err);
+      $('btnLoad').disabled=false; $('btnLoadEn').disabled=false;
+    }
+  }
+  $('btnLoad').addEventListener('click', loadLocal);
+  $('btnLoadEn').addEventListener('click', loadLocal);
+
+  function keyStart(){
+    const k = $('apiKey').value.trim();
+    if(!k){ alert(isEN()?"Please paste your Anthropic key.":"Bitte deinen Anthropic-Key einfügen."); return; }
+    byoKey = k; ready=true; revealChat();
+  }
+  $('btnKeyStart').addEventListener('click', keyStart);
+  $('btnKeyStartEn').addEventListener('click', keyStart);
+
+  async function askLocal(userText, target){
+    const messages = [{role:'system', content:systemPrompt()}, ...history, {role:'user', content:userText}];
+    const stream = await engine.chat.completions.create({ messages, stream:true, temperature:0.6 });
+    let acc='';
+    for await (const chunk of stream){ const delta = chunk.choices?.[0]?.delta?.content || ''; acc += delta; target.textContent = acc; $('chat').scrollTop=$('chat').scrollHeight; }
+    return acc;
+  }
+  async function askKey(userText, target){
+    const res = await fetch("https://api.anthropic.com/v1/messages", {
+      method:"POST",
+      headers:{ "content-type":"application/json","x-api-key":byoKey,"anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true" },
+      body: JSON.stringify({ model:chosenClaudeModel(), max_tokens:1024, system:systemPrompt(), messages:[...history, {role:'user', content:userText}] })
+    });
+    if(!res.ok){ const t=await res.text(); throw new Error("HTTP "+res.status+" — "+t.slice(0,300)); }
+    const data = await res.json();
+    const txt = (data.content||[]).map(b=>b.text||'').join('');
+    target.textContent = txt; return txt;
+  }
+
+  let busy=false;
+  async function send(){
+    if(busy) return;
+    if(!ready){ addMsg('easy', isEN()?'Please load the local model or start with your key first (above).':'Bitte zuerst oben das lokale Modell laden oder mit Schlüssel starten.', 'miss'); return; }
+    const text=$('input').value.trim(); if(!text) return;
+    busy=true; $('input').value='';
+    addMsg('user', text);
+    const target = addMsg('easy', isEN()?'…thinking':'…denkt');
+    try{
+      let full = (path==='local') ? await askLocal(text, target) : await askKey(text, target);
+      history.push({role:'user', content:text}, {role:'assistant', content:full});
+      saveHist();
+      const res = splitCheck(full);
+      target.textContent = res.answer;
+      renderCheck(res);
+    }catch(err){ target.textContent = (isEN()?"Error: ":"Fehler: ") + (err&&err.message?err.message:err); }
+    finally{ busy=false; }
+  }
+  $('btnSend').addEventListener('click', send);
+  $('btnSendEn').addEventListener('click', send);
+  $('input').addEventListener('keydown', e=>{ if(e.key==='Enter' && (e.metaKey||e.ctrlKey)){ e.preventDefault(); send(); }});
+
+  function clearSession(){
+    if(!confirm(isEN()?"Clear the saved conversation on this device?":"Gespeicherten Verlauf auf diesem Gerät löschen?")) return;
+    history=[]; saveHist(); $('chat').innerHTML='';
+  }
+  $('btnNew').addEventListener('click', clearSession);
+  $('btnNewEn').addEventListener('click', clearSession);
+
+  function saveSessionFile(){
+    const data={ app:'easy-workbench', v:1, ts:new Date().toISOString(), rules:$('rules').value, history:history };
+    const blob=new Blob([JSON.stringify(data,null,2)], {type:'application/json;charset=utf-8'});
+    const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='easy-sitzung.json'; a.click(); URL.revokeObjectURL(a.href);
+  }
+  $('btnSaveSession').addEventListener('click', saveSessionFile);
+  $('btnSaveSessionEn').addEventListener('click', saveSessionFile);
+
+  $('btnLoadSession').addEventListener('click', ()=>$('fileSession').click());
+  $('btnLoadSessionEn').addEventListener('click', ()=>$('fileSession').click());
+  $('fileSession').addEventListener('change', (e)=>{
+    const f=e.target.files&&e.target.files[0]; if(!f) return;
+    const r=new FileReader();
+    r.onload=()=>{ try{
+      const d=JSON.parse(r.result);
+      if(typeof d.rules==='string'){ $('rules').value=d.rules; saveRules(); }
+      if(Array.isArray(d.history)){ history=d.history; saveHist(); }
+      $('stepChat').classList.remove('hidden'); renderHistory();
+    }catch(err){ alert(isEN()?"Could not read this file.":"Diese Datei konnte nicht gelesen werden."); } };
+    r.readAsText(f);
+    e.target.value='';
+  });
+
+  function transcriptText(){
+    const lines = ['# easy — Workbench-Transkript','# '+new Date().toISOString(),'','## Regeln','', systemPrompt(),'','## Verlauf'];
+    for(const m of history){ lines.push((m.role==='user'?'DU: ':'EASY: ')+m.content); lines.push(''); }
+    return lines.join('\n');
+  }
+  function download(){
+    const blob = new Blob([transcriptText()], {type:'text/plain;charset=utf-8'});
+    const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='easy-workbench-transkript.txt'; a.click(); URL.revokeObjectURL(a.href);
+  }
+  $('btnDownload').addEventListener('click', download);
+  $('btnDownloadEn').addEventListener('click', download);
+</script>
+</body>
+</html>
