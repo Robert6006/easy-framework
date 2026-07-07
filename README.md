@@ -9,6 +9,19 @@
 
 The model is a swappable engine: **bring your own**. Nothing is locked to a vendor, nothing is a black box.
 
+## Quickstart
+
+easy is just rules in a file — no install, no dependencies.
+
+1. Grab the starter ruleset: [`easy-starter-rules_DE-EN.md`](easy-starter-rules_DE-EN.md).
+2. Paste the rules into your AI tool's system prompt / custom instructions — or drop them in a
+   **`CLAUDE.md`** or **`AGENTS.md`** at your project root, where tools like Claude Code and other
+   agent runners pick them up automatically.
+3. Ask something. easy answers, then appends its visible check against the rules.
+4. Edit the rules anytime — they're yours. Version them in git like any other file.
+
+That's the whole loop. Everything below is detail.
+
 ## Why it exists
 
 easy grew out of a real, long-running project — building a tube amplifier with a planned microprocessor,
@@ -42,6 +55,9 @@ sessions, not just a single chat. That need — context that stays — became th
 
 **easy has its own limits, too.**
 
+- **The Workbench is a demo, not the full easy.** It shows the *spark* (readable rules + the visible
+  check) and a taste of the *heart* (persistence in your browser) — but not the whole thing: no files
+  on your machine, no rules shared across devices, no project structure. That is what you download and run.
 - **The check is a discipline, not a guarantee.** easy has the model check its own answer against the
   rules — this surfaces reasoning and curbs overconfidence, but a model can still miss its own mistakes.
   It shows its work; it does not prove it right.
